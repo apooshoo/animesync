@@ -27,7 +27,8 @@
   	{
   		"run_at": "document_idle",
   		"matches": [
-  			"<all_urls>"
+  			// "<all_urls>"
+  			"https://horriblesubs.info/shows/*"
   		],
   		"js": ["content.js"]
   	}

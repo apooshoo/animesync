@@ -39,6 +39,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
     if(request.message === "open_new_unfocused_tab"){
         console.log("RECEIVED MESSAGE");
         console.log("URL:", request.url);
-        chrome.tabs.create({"url": request.url});
+        chrome.tabs.create({"url": request.url, "active": false});
     };
 });
