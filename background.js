@@ -48,6 +48,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
                 tabId: newTab.id,
                 animeId: request.animeId
             };
+
             chrome.storage.sync.get(['animeTabs'], (result)=>{
                 // console.log('getting from storage', result.animeTabs);
                 // console.log('going to save animeData:', animeData);
@@ -59,6 +60,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
                 });
             });
 
+            // chrome.tabs.sendMessage(animeData.tabId, {"message": "go edit"}, ()=>{
+            //     console.log('sent message to tab with id:', animeData.tabId);
+            // });
+            chrome.tabs.sendMessage(newTab.id, {"message": "go edit"});
 
         });
     };

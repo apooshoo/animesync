@@ -2,11 +2,15 @@
   "name": "ANIME SYNCER",
   "version": "1.0",
   "description": "syncsync!",
-  "permissions": ["activeTab", "declarativeContent", "storage"],
+  "permissions": ["activeTab",
+  	"declarativeContent",
+  	"storage",
+  	"tabs", "https://myanimelist.net/anime/*"
+  ],
   "options_page": "options.html",
   "background": {
     "scripts": ["background.js"],
-    "persistent": false
+    "persistent": true
   },
   "browser_action": {//change this to page action for HS
     // "default_popup": "popup.html",
@@ -26,11 +30,13 @@
   "content_scripts": [
   	{
   		"run_at": "document_idle",
-  		"matches": [
-  			// "<all_urls>"
-  			"https://horriblesubs.info/shows/*"
-  		],
+  		"matches": ["https://horriblesubs.info/shows/*"],
   		"js": ["content.js"]
+  	},
+  	{
+  		"run_at": "document_idle",
+  		"matches": ["https://myanimelist.net/anime/*"],
+  		"js": ["animeTab.js"]
   	}
   ],
   "manifest_version": 2
