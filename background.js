@@ -34,11 +34,32 @@
 //         chrome.tabs.create({"url": request.url});
 //     };
 // });
+chrome.storage.sync.set({animeTabs: []}, ()=>{
+    console.log('inital setup for animeTabs:', []);
+});
+
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
     if(request.message === "open_new_unfocused_tab"){
-        console.log("RECEIVED MESSAGE");
-        console.log("URL:", request.url);
-        chrome.tabs.create({"url": request.url, "active": false});
+        // console.log("URL:", request.url); //req has message, url and animeId
+        chrome.tabs.create({"url": request.url, "active": false}, (newTab)=>{
+            console.log("id of new tab:", newTab.id);
+            let animeData = {
+                tabId: newTab.id,
+                animeId: request.animeId
+            };
+            chrome.storage.sync.get(['animeTabs'], (result)=>{
+                // console.log('getting from storage', result.animeTabs);
+                // console.log('going to save animeData:', animeData);
+                let animeTabs = result.animeTabs;
+                animeTabs.push(animeData);
+                // console.log('going to save animeTabs:', animeTabs);
+                chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
+                    console.log('saving:', animeTabs);
+                });
+            });
+
+
+        });
     };
 });

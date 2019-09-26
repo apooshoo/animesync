@@ -30,7 +30,7 @@ links.map(link=>{
           } else {
             let anime = responseData.results[0];
             console.log("Returned anime:", anime);
-            chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", "url": anime.url});
+            chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id});
           };
         });
         // request.open("GET", 'https://api.jikan.moe/v3/search/manga?q=grand%20blue&page=1');
