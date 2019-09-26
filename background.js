@@ -39,32 +39,64 @@ chrome.storage.sync.set({animeTabs: []}, ()=>{
 });
 
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
-    if(request.message === "open_new_unfocused_tab"){
-        // console.log("URL:", request.url); //req has message, url and animeId
-        chrome.tabs.create({"url": request.url, "active": false}, (newTab)=>{
-            console.log("id of new tab:", newTab.id);
-            let animeData = {
-                tabId: newTab.id,
-                animeId: request.animeId
-            };
+// chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
+//     if(request.message === "open_new_unfocused_tab"){
+//         // console.log("URL:", request.url); //req has message, url and animeId
+//         chrome.tabs.create({"url": request.url, "active": false}, (newTab)=>{
+//             console.log("id of new tab:", newTab.id);
+//             let animeData = {
+//                 tabId: newTab.id,
+//                 animeId: request.animeId
+//             };
 
-            chrome.storage.sync.get(['animeTabs'], (result)=>{
-                // console.log('getting from storage', result.animeTabs);
-                // console.log('going to save animeData:', animeData);
-                let animeTabs = result.animeTabs;
-                animeTabs.push(animeData);
-                // console.log('going to save animeTabs:', animeTabs);
-                chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
-                    console.log('saving:', animeTabs);
+//             chrome.storage.sync.get(['animeTabs'], (result)=>{
+//                 // console.log('getting from storage', result.animeTabs);
+//                 // console.log('going to save animeData:', animeData);
+//                 let animeTabs = result.animeTabs;
+//                 animeTabs.push(animeData);
+//                 // console.log('going to save animeTabs:', animeTabs);
+//                 chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
+//                     console.log('saving:', animeTabs);
+//                 });
+//             });
+
+//             // chrome.tabs.sendMessage(animeData.tabId, {"message": "go edit"}, ()=>{
+//             //     console.log('sent message to tab with id:', animeData.tabId);
+//             // });
+//             chrome.tabs.sendMessage(newTab.id, {"message": "go edit"});
+
+//         });
+//     };
+// });
+
+chrome.runtime.onConnect.addListener((port)=>{
+    port.onMessage.addListener((msg)=>{
+        if(msg.message === "open_new_unfocused_tab"){
+            chrome.tabs.create({"url": msg.url, "active": false}, (newTab)=>{
+                console.log("id of new tab:", newTab.id);
+                let animeData = {
+                    tabId: newTab.id,
+                    animeId: msg.animeId
+                };
+
+                chrome.storage.sync.get(['animeTabs'], (result)=>{
+                    // console.log('getting from storage', result.animeTabs);
+                    // console.log('going to save animeData:', animeData);
+                    let animeTabs = result.animeTabs;
+                    animeTabs.push(animeData);
+                    // console.log('going to save animeTabs:', animeTabs);
+                    chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
+                        console.log('saving:', animeTabs);
+                    });
                 });
+
+                // chrome.tabs.sendMessage(animeData.tabId, {"message": "go edit"}, ()=>{
+                //     console.log('sent message to tab with id:', animeData.tabId);
+                // });
+                chrome.tabs.sendMessage(newTab.id, {"message": "go edit"});// THIS DOESNT CONNECT TO ANIMETAB!------------------------------PRIORITY, DO CONNECT MAYBE
+
             });
-
-            // chrome.tabs.sendMessage(animeData.tabId, {"message": "go edit"}, ()=>{
-            //     console.log('sent message to tab with id:', animeData.tabId);
-            // });
-            chrome.tabs.sendMessage(newTab.id, {"message": "go edit"});
-
-        });
-    };
-});
+            port.postMessage({reply: "NO"})
+        }
+    })
+})

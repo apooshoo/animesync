@@ -1,3 +1,4 @@
+console.log("ANIME TAB WORKS")//------THIS WORKS
 chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
     if(request.message === "go edit"){
         console.log('received msg in tab')

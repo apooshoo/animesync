@@ -30,7 +30,12 @@ links.map(link=>{
           } else {
             let anime = responseData.results[0];
             console.log("Returned anime:", anime);
-            chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id});
+            // chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id});
+            var port = chrome.runtime.connect({name: "sync"});
+            port.postMessage({message: "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id});
+            port.onMessage.addListener((msg)=>{
+                console.log(msg)
+            });
           };
         });
         // request.open("GET", 'https://api.jikan.moe/v3/search/manga?q=grand%20blue&page=1');
