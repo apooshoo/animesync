@@ -1,5 +1,8 @@
 // alert('HELLO FROM CONTENT JS')
 //NOTE: CONTENT JS CANNOT USE MOST chrome. APIs APART FROM .extension, .runtime, .storage, .i18n
+window.onload = ()=>{//-----------------------------------------------------------STRUGGLE! WHY IS THIS REQ FOR MY NODELIST?!!?
+    //-----------------------------------------------------------------SHOULDNT run_at DOCUMENT IDLE SOLVE THIS WHYYYYYYY
+
 
 console.log('testing from content js');
 // let a = document.getElementsByTagName('a');
@@ -14,13 +17,17 @@ let showTitle = splitString[4];
 let queryString = showTitle.replace(/-/g, '%20');
 console.log('show title:', queryString)
 
-var htmlCollection = document.getElementsByClassName('hs-magnet-link');
-// console.log(htmlCollection);
-var links = Array.from(htmlCollection);
+var nodeList = document.querySelectorAll(".hs-magnet-link");
+// console.log(nodeList);
+// var links = Array.prototype.slice.call( htmlCollection )
+var links = [...nodeList]
+// var links = Array.from(htmlCollection);
+// console.log(links)
+// console.log(links[0])
 links.map(link=>{
     link.parentNode.onclick = () =>{//remove parentNode when you're done testing- go back to magnet-link
         // chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", })
-        console.log('clicked!');
+        console.log('clicked!', link);
         var request = new XMLHttpRequest();
 
         request.addEventListener("load", function(){
@@ -43,6 +50,10 @@ links.map(link=>{
         request.send();
     };
 });
+
+
+}
+
 
 
 

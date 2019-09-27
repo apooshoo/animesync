@@ -87,9 +87,9 @@ chrome.runtime.onConnect.addListener((port)=>{
             if(msg.message === "ready_to_click"){
                 console.log('sending click info');
                 chrome.storage.sync.get(['animeTabs'], (result)=>{
-                    let animeTabs = results.animeTabs[0];
+                    let animeTabs = result.animeTabs[0];
                     console.log('sending:', animeTabs)
-                    port.postMessage({reply: animeTabs})
+                    port.postMessage({reply: "data_for_click", data: animeTabs})
                 })
 
             }
