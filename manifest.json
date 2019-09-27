@@ -29,12 +29,10 @@
   },
   "content_scripts": [
   	{
-  		"run_at": "document_idle",
   		"matches": ["https://horriblesubs.info/shows/*"],
   		"js": ["content.js"]
   	},
   	{
-  		"run_at": "document_idle",
   		"matches": ["https://myanimelist.net/anime/*"],
   		"js": ["animeTab.js"]
   	}

@@ -13,8 +13,8 @@ port.postMessage({message: "ready_to_click"});
 port.onMessage.addListener((msg)=>{
     if(msg.reply === "data_for_click"){
         console.log("data in animeTab:", msg.data);
-    }
-})
+    };
+});
 //LISTEN FOR REPLY!!_-----------------------------------------------------------
 // chrome.tabs.query({active: false}, (tabs)=>{
 //     console.log(tabs[tabs.length-1])

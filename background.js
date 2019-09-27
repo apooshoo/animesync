@@ -42,11 +42,13 @@ chrome.storage.sync.set({animeTabs: [], processing: false}, ()=>{
 let toggleProcessing = () => {
     chrome.storage.sync.get(['processing'], (result)=>{
         console.log('toggle start');
-        chrome.storage.sync.set({processing: !result}, ()=>{
-            console.log('setting processing to:', !result);
+        chrome.storage.sync.set({processing: !result.processing}, ()=>{
+            console.log('setting processing to:', !result.processing);
         });
     });
 };
+
+
 
 
 
@@ -62,7 +64,7 @@ chrome.runtime.onConnect.addListener((port)=>{
                         tabId: newTab.id,
                         animeId: msg.animeId
                     };
-
+                    toggleProcessing();
                     chrome.storage.sync.get(['animeTabs'], (result)=>{
                         // console.log('getting from storage', result.animeTabs);
                         // console.log('going to save animeData:', animeData);
@@ -86,13 +88,17 @@ chrome.runtime.onConnect.addListener((port)=>{
         port.onMessage.addListener((msg)=>{
             if(msg.message === "ready_to_click"){
                 console.log('sending click info');
-                chrome.storage.sync.get(['animeTabs'], (result)=>{
-                    let animeTabs = result.animeTabs[0];
-                    console.log('sending:', animeTabs)
-                    port.postMessage({reply: "data_for_click", data: animeTabs})
-                })
-
-            }
-        })
-    }
+                chrome.storage.sync.get(['animeTabs', 'processing'], (result)=>{
+                    console.log(result.processing);
+                    if(result.processing === true){
+                        let animeTabs = result.animeTabs[0];
+                        console.log('sending:', animeTabs)
+                        port.postMessage({reply: "data_for_click", data: animeTabs})
+                    } else {
+                        console.log('will not process')
+                    };
+                });
+            };
+        });
+    };
 });
