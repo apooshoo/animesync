@@ -1,10 +1,16 @@
 console.log('in checklogin');
+var port = chrome.runtime.connect({name: "checkLogin"});
+
 let loginBtn = $('.btn-login')[0];
-console.log(loginBtn);
+// console.log(loginBtn);
 if (loginBtn === undefined){
     console.log('already logged in!')
-    chrome.runtime.sendMessage({"message": "already_logged_in"});
+    port.postMessage({message: "already_logged_in"});
 } else {
     console.log('not logged in yet')
-    chrome.runtime.sendMessage({"message": "redirect_to_login"});
+    port.postMessage({message: "redirect_to_login"});
 }
+
+port.onMessage.addListener((msg)=>{
+    console.log(msg)
+})

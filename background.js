@@ -6,22 +6,14 @@
 
 chrome.storage.local.clear();//rm later
 
-chrome.storage.sync.set({animeTabs: [], processing: false, logging: false}, ()=>{
+chrome.storage.sync.set({animeTabs: [], processing: false}, ()=>{
     console.log('inital setup for animeTabs:', []);
     console.log('inital value of PROCESSING:', false);
-    console.log('initial value of LOGGING', false);
 });
-chrome.storage.local.set({logging: false}, ()=>{
-    console.log('initial value of LOGGING', false);
+chrome.storage.local.set({logging: true}, ()=>{
+    console.log('initial value of LOGGING', true);
 });
 
-let toggleLogging = () => {
-    chrome.storage.local.get(['logging'], (result)=>{
-        chrome.storage.local.set({logging: !result.logging}, ()=>{
-            console.log('setting logging to:', !result.logging);
-        })
-    });
-};
 
 let toggleProcessing = () => {
     chrome.storage.sync.get(['processing'], (result)=>{
@@ -68,35 +60,35 @@ let createNewTab = (msg) => {
     });
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
-    if (request.message === "already_logged_in"){
-        console.log('already logged in!');
-        //CLOSE checkLogin TAB
-    } else if (request.message === "redirect_to_login"){//add code for failed login here
-        console.log('redirecting to login page');
-        chrome.tabs.create({"url": "https://myanimelist.net/login.php?from=%2F", "active": false}, (newTab)=>{
-            chrome.storage.sync.set({loginTabId: newTab.id}, ()=>{
-                console.log('saving loginTabId', newTab.id);
-            });
-        });
-    } else if (request.message === "inputting_login_info"){
-        console.log("sending input info");
-        chrome.storage.local.get(['username', 'password', 'logging'], (result)=>{
-            console.log("logging", result.logging);
-            if(result.logging === false){
-                let data = {
-                    username: result.username,
-                    password: result.password
-                };
-                sendResponse({data: data});
-                toggleLogging();
-            } else if (result.logging === true){
-                console.log('already logging in')
-            }
-        });
-        return true
-    }
-});
+// chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
+//     if (request.message === "already_logged_in"){
+//         console.log('already logged in!');
+//         //CLOSE checkLogin TAB
+//     } else if (request.message === "redirect_to_login"){//add code for failed login here
+//         console.log('redirecting to login page');
+//         chrome.tabs.create({"url": "https://myanimelist.net/login.php?from=%2F", "active": false}, (newTab)=>{
+//             chrome.storage.sync.set({loginTabId: newTab.id}, ()=>{
+//                 console.log('saving loginTabId', newTab.id);
+//             });
+//         });
+//     } else if (request.message === "inputting_login_info"){
+//         console.log("sending input info");
+//         chrome.storage.local.get(['username', 'password', 'logging'], (result)=>{
+//             console.log("logging", result.logging);
+//             if(result.logging === false){
+//                 let data = {
+//                     username: result.username,
+//                     password: result.password
+//                 };
+//                 sendResponse({data: data});
+//                 toggleLogging();
+//             } else if (result.logging === true){
+//                 console.log('already logging in')
+//             }
+//         });
+//         return true
+//     }
+// });
 
 chrome.runtime.onConnect.addListener((port)=>{
     if(port.name === "sync"){
@@ -167,5 +159,50 @@ chrome.runtime.onConnect.addListener((port)=>{
                 clearProcessed();
             }
         });
-    };
+    } else if (port.name === "checkLogin"){
+        port.onMessage.addListener((msg)=>{
+            chrome.storage.local.get(['logging'], (result)=>{
+                if(result.logging === true){
+                    if(msg.message === "already_logged_in"){
+                        console.log('already logged in');
+                        chrome.storage.local.set({logging: !result.logging}, ()=>{
+                            console.log('setting logging to:', !result.logging);
+                        });
+                        //close checkLogin tab
+                        port.postMessage({reply: "alr logged in, close tab please!"});//--------------------------------------------not done
+                    } else if (msg.message === "redirect_to_login"){
+                        console.log('redirecting to login page');
+                        chrome.tabs.create({"url": "https://myanimelist.net/login.php?from=%2F", "active": false}, (newTab)=>{
+                            chrome.storage.sync.set({loginTabId: newTab.id}, ()=>{
+                                console.log('saving loginTabId', newTab.id);
+                                //close checkLogin tab
+                                port.postMessage({reply: "not logged in, redirecting, close tab please!"});//-----------------------same
+                            });
+                        });
+                    };
+                };
+            });
+        });
+    } else if (port.name === "login"){
+        port.onMessage.addListener((msg)=>{
+            if (msg.message === "inputting_login_info"){
+                chrome.storage.local.get(['username', 'password', 'logging'], (result)=>{
+                    console.log("logging", result.logging)
+                    if(result.logging === true){
+                        console.log('sending login info')
+                        let data = {
+                            username: result.username,
+                            password: result.password
+                        };
+                        chrome.storage.local.set({logging: !result.logging}, ()=>{
+                            console.log('setting logging to:', !result.logging);
+                        });
+                        port.postMessage({reply: "login_info", data: data});
+                    } else if (result.logging === false){
+                        port.postMessage({reply: "abort_login"});//---------------------------------------------close login tab
+                    }
+                });
+            };
+        });
+    }
 });
