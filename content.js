@@ -17,9 +17,15 @@ port.onMessage.addListener((msg)=>{
         let header = $("<h5>MAL Login Info</h5>");
         let usernameInput = $("<input type='text' placeholder='Username' class='username-input'/>").css({"display": "block"});
         let passwordInput = $("<input type='password' placeholder='Password' class='password-input'/>").css({"display": "block"});
-        let submitBtn = $("<button>Save Info</button>");
+        let submitBtn = $("<button>Save Info</button>").on("click", ()=>{
+            let data = {
+                username: $('.username-input').val(),
+                password: $('.password-input').val()
+            }
+            port.postMessage({reply: "sending_login_info", data: data});
+        });
         div.append([header, usernameInput, passwordInput, submitBtn]);
-        $("body").append(div)
+        $("body").append(div);
     }
 })
 

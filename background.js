@@ -71,13 +71,16 @@ chrome.runtime.onConnect.addListener((port)=>{
                         port.postMessage({reply: "background has login info!"});
                     };
                 });
+            } else if (msg.reply === "sending_login_info"){
+                chrome.storage.local.set({username: msg.data.username, password: msg.data.password}, ()=>{
+                    console.log('saving user info', msg.data)
+                });
             } else if (msg.message === "open_new_unfocused_tab"){
                 chrome.storage.local.get(['username', 'password'], (result)=>{
                     console.log('local username', result.username);
                     console.log('local password', result.password);
                     if(result.username === undefined || result.password === undefined){
-                        console.log('need login info');
-                        //get login info
+                        alert("No user info saved! Please login to MAL manually to continue using this extension")
                         createNewTab(msg);
                     } else {
                         createNewTab(msg);
