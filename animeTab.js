@@ -6,7 +6,16 @@ console.log("in anime tab")
 //data class changes
 
 var port = chrome.runtime.connect({name: "animeTab"});
-port.postMessage({message: "ready_to_click"});
+let loginBtn = document.querySelectorAll('#malLogin');
+console.log(loginBtn);
+if (loginBtn[0] === undefined){
+    console.log('confirmed logged in');
+    port.postMessage({message: "ready_to_click"});
+} else {
+    console.log("not logged in yet");
+    port.postMessage({message: "ready_to_login"});
+}
+// port.postMessage({message: "ready_to_click"});
 port.onMessage.addListener((msg)=>{
     if(msg.reply === "data_for_click"){
         console.log("data in animeTab:", msg.data);
@@ -14,24 +23,18 @@ port.onMessage.addListener((msg)=>{
         if (addToListBtn === undefined){
             console.log('already added, changing other info now');
 
-            let episodesSeenInput = document.querySelectorAll('#myinfo_watchedeps')[0];
+            let episodesSeenInput = document.querySelectorAll('#myinfo_watchedeps')[0];//NOTE: THIS PART ONWARDS DOESNT WORK FOR LOGN RUNNING SERIES WITHOUT END DATE (like black clover and boruto)
             episodesSeenInput.value = msg.data.episodeNumber;
-            console.log("episodesSeenInput", episodesSeenInput);
 
             let totalEpisodes = document.querySelectorAll('#curEps')[0].innerHTML;
-            console.log(totalEpisodes);
             if (totalEpisodes === msg.data.episodeNumber){
-                console.log('same!')
                 let statusBtn = document.getElementById('myinfo_status');
-                console.log("statusBtn:", statusBtn);
                 let completedOption = statusBtn.childNodes[1];
                 completedOption.selected = true;
             };
 
             let updateBtn = document.querySelectorAll('.inputButton')[1];
-            console.log(updateBtn)
             updateBtn.click();
-            console.log('clicked!')
 
             port.postMessage({reply: "changed episode info"});
         } else {

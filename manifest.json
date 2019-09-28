@@ -30,7 +30,7 @@
   "content_scripts": [
   	{
   		"matches": ["https://horriblesubs.info/shows/*"],
-  		"js": ["content.js"]
+  		"js": ["jquery.js", "content.js"]
   	},
   	{
   		"matches": ["https://myanimelist.net/anime/*"],

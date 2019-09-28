@@ -4,36 +4,6 @@
 
 'use strict';
 
-// chrome.runtime.onInstalled.addListener(function() {
-//   chrome.storage.sync.set({color: '#3aa757'}, function() {
-//     console.log('The color is green.');
-//   });
-//   chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {//declare rules/conditions for when to run, need permission
-//     chrome.declarativeContent.onPageChanged.addRules([{
-//       conditions: [new chrome.declarativeContent.PageStateMatcher({
-//         pageUrl: {hostEquals: 'developer.chrome.com'},//URL condition
-//       })],
-//       actions: [new chrome.declarativeContent.ShowPageAction()]
-//     }]);
-//   });
-// });
-
-
-
-// // Called when the user clicks on the browser action.
-// chrome.browserAction.onClicked.addListener((tab)=>{
-//   // Send a message to the active tab
-//   chrome.tabs.query({active: true, currentWindow: true}, (tabs)=>{
-//     var activeTab = tabs[0];//i assume this is required because you want to isolate the content.js on that page?
-//     chrome.tabs.sendMessage(activeTab.id, {"message": "clicked_browser_action"});
-//   });
-// });
-
-// chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
-//     if(request.message === "open_new_tab"){
-//         chrome.tabs.create({"url": request.url});
-//     };
-// });
 chrome.storage.sync.set({animeTabs: [], processing: false}, ()=>{
     console.log('inital setup for animeTabs:', []);
     console.log('inital value of PROCESSING:', false);
@@ -41,7 +11,6 @@ chrome.storage.sync.set({animeTabs: [], processing: false}, ()=>{
 
 let toggleProcessing = () => {
     chrome.storage.sync.get(['processing'], (result)=>{
-        console.log('toggle start');
         chrome.storage.sync.set({processing: !result.processing}, ()=>{
             console.log('setting processing to:', !result.processing);
         });
@@ -52,14 +21,35 @@ let clearProcessed = () => {
     chrome.storage.sync.get(['animeTabs'], (result)=>{
         console.log("clearing animeTab");
         let animeTabs = result.animeTabs;
-        console.log("before clear:", animeTabs);
         animeTabs.shift();
-        console.log("after clear:", animeTabs);
         chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
             console.log("saved animeTabs to storage:", animeTabs);
         })
     })
 }
+
+let createNewTab = (msg) => {
+    chrome.tabs.create({"url": msg.url, "active": false}, (newTab)=>{
+        console.log("id of new tab:", newTab.id);
+        let animeData = {
+            tabId: newTab.id,
+            animeId: msg.animeId,
+            episodeNumber: msg.episodeNumber
+        };
+        toggleProcessing();
+        chrome.storage.sync.get(['animeTabs'], (result)=>{
+            // console.log('getting from storage', result.animeTabs);
+            // console.log('going to save animeData:', animeData);
+            let animeTabs = result.animeTabs;
+            animeTabs.push(animeData);
+            // console.log('going to save animeTabs:', animeTabs);
+            chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
+                console.log('saving:', animeTabs);
+            });
+        });
+    });
+}
+
 
 
 
@@ -69,25 +59,29 @@ let clearProcessed = () => {
 chrome.runtime.onConnect.addListener((port)=>{
     if(port.name === "sync"){
         port.onMessage.addListener((msg)=>{
-            if(msg.message === "open_new_unfocused_tab"){
-                chrome.tabs.create({"url": msg.url, "active": false}, (newTab)=>{
-                    console.log("id of new tab:", newTab.id);
-                    let animeData = {
-                        tabId: newTab.id,
-                        animeId: msg.animeId,
-                        episodeNumber: msg.episodeNumber
+            if(msg.message === "check_login_info"){
+                chrome.storage.local.get(['username', 'password'], (result)=>{
+                    console.log('local username', result.username);
+                    console.log('local password', result.password);
+                    if(result.username === undefined || result.password === undefined){
+                        console.log('need login info');
+                        port.postMessage({reply: "need_login_info"});
+                    } else {
+                        console.log('have login info!');
+                        port.postMessage({reply: "background has login info!"});
                     };
-                    toggleProcessing();
-                    chrome.storage.sync.get(['animeTabs'], (result)=>{
-                        // console.log('getting from storage', result.animeTabs);
-                        // console.log('going to save animeData:', animeData);
-                        let animeTabs = result.animeTabs;
-                        animeTabs.push(animeData);
-                        // console.log('going to save animeTabs:', animeTabs);
-                        chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
-                            console.log('saving:', animeTabs);
-                        });
-                    });
+                });
+            } else if (msg.message === "open_new_unfocused_tab"){
+                chrome.storage.local.get(['username', 'password'], (result)=>{
+                    console.log('local username', result.username);
+                    console.log('local password', result.password);
+                    if(result.username === undefined || result.password === undefined){
+                        console.log('need login info');
+                        //get login info
+                        createNewTab(msg);
+                    } else {
+                        createNewTab(msg);
+                    };
                 });
                 port.postMessage({reply: "DONE SENDING REQ TO ANIMETAB"})
             };
@@ -113,6 +107,11 @@ chrome.runtime.onConnect.addListener((port)=>{
                 clearProcessed();
             } else if (msg.reply === "added to list"){
                 console.log('added to list and back in background');
+                toggleProcessing();
+                clearProcessed();
+            } else if (msg.message === "ready_to_login"){
+                console.log("gonna get login info in background");
+                //remove below when done
                 toggleProcessing();
                 clearProcessed();
             }

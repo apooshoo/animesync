@@ -4,12 +4,26 @@ window.onload = ()=>{//---------------------------------------------------------
     //-----------------------------------------------------------------SHOULDNT run_at DOCUMENT IDLE SOLVE THIS WHYYYYYYY
 
 
-console.log('testing from content js');
-// let a = document.getElementsByTagName('a');
-// let firstHref = a[0];
-// console.log(firstHref)
 
-//note: the whole point of content is to grab info for background.js!
+console.log('testing from content js');
+var port = chrome.runtime.connect({name: "sync"});
+port.postMessage({message: "check_login_info"});
+port.onMessage.addListener((msg)=>{
+    console.log('msg in content', msg);
+    if (msg.reply === "need_login_info"){
+        console.log('proceeding to get login info')
+        let div = $("<div class='login-inputs'></div>").css({"height": "140px", "width": "250px", "position": "absolute", "top": "0", "right": "0", "background-color": "white", "border": "1px solid black", "padding": "1px 10px 1px 10px"});
+
+        let header = $("<h5>MAL Login Info</h5>");
+        let usernameInput = $("<input type='text' placeholder='Username' class='username-input'/>").css({"display": "block"});
+        let passwordInput = $("<input type='password' placeholder='Password' class='password-input'/>").css({"display": "block"});
+        let submitBtn = $("<button>Save Info</button>");
+        div.append([header, usernameInput, passwordInput, submitBtn]);
+        $("body").append(div)
+    }
+})
+
+
 
 let urlString = location.href.toString();
 let splitString = urlString.split('/');
@@ -42,11 +56,11 @@ links.map(link=>{
             let anime = responseData.results[0];
             console.log("Returned anime:", anime);
             // chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id});
-            var port = chrome.runtime.connect({name: "sync"});
+
             port.postMessage({message: "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id, "episodeNumber": episodeNumber});
-            port.onMessage.addListener((msg)=>{
-                console.log(msg)
-            });
+            // port.onMessage.addListener((msg)=>{
+            //     console.log(msg)
+            // });
           };
         });
         // request.open("GET", 'https://api.jikan.moe/v3/search/manga?q=grand%20blue&page=1');
