@@ -103,10 +103,11 @@ chrome.runtime.onConnect.addListener((port)=>{
                         console.log('sending:', animeTabs)
                         port.postMessage({reply: "data_for_click", data: animeTabs})
                     } else {
-                        console.log('will not process')
+                        console.log('will not process')//HERE IS WHERE YOU WILL ADD LISTENER FOR WHEN PROCESSING === FALSE.
+                        //YOU WILL THEN REDIRECT TO THE APPROPRIATE TAB (tabId of animeTabs[0] to get it to process)
                     };
                 });
-            } else if (msg.reply === "changed other info"){
+            } else if (msg.reply === "changed episode info"){
                 console.log('changed other info and back in background');
                 toggleProcessing();
                 clearProcessed();

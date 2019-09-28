@@ -13,22 +13,20 @@ port.onMessage.addListener((msg)=>{
         let addToListBtn = document.querySelectorAll('.myinfo_addtolist')[0];
         if (addToListBtn === undefined){
             console.log('already added, changing other info now');
-            let statusBtn = document.getElementById('myinfo_status');
-            console.log("statusBtn:", statusBtn);
-            port.postMessage({reply: "changed other info"});
+            // let statusBtn = document.getElementById('myinfo_status');
+            // console.log("statusBtn:", statusBtn);
+            let episodesSeenInput = document.querySelectorAll('#myinfo_watchedeps')[0];
+            episodesSeenInput.value = msg.data.episodeNumber;
+            console.log("episodesSeenInput", episodesSeenInput);
+
+            let updateBtn = document.querySelectorAll('.inputButton')[1];
+            console.log(updateBtn)
+            updateBtn.click();
+            console.log('clicked!')
+            port.postMessage({reply: "changed episode info"});
         } else {
             console.log('simulating click on addToListBtn');
-            // let simulateClick = () => {
-            //     let click = new MouseEvent('click', {
-            //         bubbles:true,
-            //         cancelable:false,
-            //         view:window
-            //     });
-            //     let clicking = !addToListBtn.dispatchEvent(click);
-            // };
-            // simulateClick();
             addToListBtn.click();
-            console.log('clicked!');
             port.postMessage({reply: "added to list"});
         };
     };
