@@ -39,6 +39,10 @@
   	{
   		"matches": ["https://myanimelist.net/"],
   		"js": ["jquery.js", "checkLogin.js"]
+  	},
+  	{
+  		"matches": ["https://myanimelist.net/login.php?from=%2F"],
+  		"js": ["jquery.js", "login.js"]
   	}
   ],
   "manifest_version": 2

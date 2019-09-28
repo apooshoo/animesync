@@ -8,6 +8,7 @@ console.log("in anime tab")
 var port = chrome.runtime.connect({name: "animeTab"});
 let loginBtn = document.querySelectorAll('#malLogin');
 console.log(loginBtn);
+//btm is redundant maybe---------------------------------------------------
 if (loginBtn[0] === undefined){
     console.log('confirmed logged in');
     port.postMessage({message: "ready_to_click"});
