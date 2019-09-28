@@ -28,6 +28,10 @@ links.map(link=>{
     link.parentNode.onclick = () =>{//remove parentNode when you're done testing- go back to magnet-link
         // chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", })
         console.log('clicked!', link);
+
+        let episodeNumber = link.parentNode.id.substring(0,2);//add one more parentnode when you're done to compensate for line 28
+        console.log("ep number:", episodeNumber);
+
         var request = new XMLHttpRequest();
 
         request.addEventListener("load", function(){
@@ -39,7 +43,7 @@ links.map(link=>{
             console.log("Returned anime:", anime);
             // chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id});
             var port = chrome.runtime.connect({name: "sync"});
-            port.postMessage({message: "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id});
+            port.postMessage({message: "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id, "episodeNumber": episodeNumber});
             port.onMessage.addListener((msg)=>{
                 console.log(msg)
             });

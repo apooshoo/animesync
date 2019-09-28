@@ -48,6 +48,18 @@ let toggleProcessing = () => {
     });
 };
 
+let clearProcessed = () => {
+    chrome.storage.sync.get(['animeTabs'], (result)=>{
+        console.log("clearing animeTab");
+        let animeTabs = result.animeTabs;
+        console.log("before clear:", animeTabs);
+        animeTabs.shift();
+        console.log("after clear:", animeTabs);
+        chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
+            console.log("saved animeTabs to storage:", animeTabs);
+        })
+    })
+}
 
 
 
@@ -62,7 +74,8 @@ chrome.runtime.onConnect.addListener((port)=>{
                     console.log("id of new tab:", newTab.id);
                     let animeData = {
                         tabId: newTab.id,
-                        animeId: msg.animeId
+                        animeId: msg.animeId,
+                        episodeNumber: msg.episodeNumber
                     };
                     toggleProcessing();
                     chrome.storage.sync.get(['animeTabs'], (result)=>{
@@ -75,11 +88,6 @@ chrome.runtime.onConnect.addListener((port)=>{
                             console.log('saving:', animeTabs);
                         });
                     });
-
-                    // chrome.tabs.sendMessage(animeData.tabId, {"message": "go edit"}, ()=>{
-                    //     console.log('sent message to tab with id:', animeData.tabId);
-                    // });
-                    // chrome.tabs.sendMessage(newTab.id, {"message": "go edit"});// THIS DOESNT CONNECT TO ANIMETAB!------------------------------PRIORITY, DO CONNECT MAYBE
                 });
                 port.postMessage({reply: "DONE SENDING REQ TO ANIMETAB"})
             };
@@ -98,7 +106,15 @@ chrome.runtime.onConnect.addListener((port)=>{
                         console.log('will not process')
                     };
                 });
-            };
+            } else if (msg.reply === "changed other info"){
+                console.log('changed other info and back in background');
+                toggleProcessing();
+                clearProcessed();
+            } else if (msg.reply === "added to list"){
+                console.log('added to list and back in background');
+                toggleProcessing();
+                clearProcessed();
+            }
         });
     };
 });
