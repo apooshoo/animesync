@@ -4,6 +4,8 @@
 
 'use strict';
 
+chrome.storage.local.clear();//rm later
+
 chrome.storage.sync.set({animeTabs: [], processing: false}, ()=>{
     console.log('inital setup for animeTabs:', []);
     console.log('inital value of PROCESSING:', false);
@@ -21,6 +23,10 @@ let clearProcessed = () => {
     chrome.storage.sync.get(['animeTabs'], (result)=>{
         console.log("clearing animeTab");
         let animeTabs = result.animeTabs;
+        //delete tab
+        // chrome.tabs.get(animeTabs[0].id, ()=>{
+
+        // })
         animeTabs.shift();
         chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
             console.log("saved animeTabs to storage:", animeTabs);
@@ -50,12 +56,6 @@ let createNewTab = (msg) => {
     });
 }
 
-
-
-
-
-
-
 chrome.runtime.onConnect.addListener((port)=>{
     if(port.name === "sync"){
         port.onMessage.addListener((msg)=>{
@@ -68,12 +68,18 @@ chrome.runtime.onConnect.addListener((port)=>{
                         port.postMessage({reply: "need_login_info"});
                     } else {
                         console.log('have login info!');
-                        port.postMessage({reply: "background has login info!"});
+                        //LOGIN HERE
+                        chrome.tabs.create({"url": "https://myanimelist.net/", "active": false}, (newTab)=>{
+                            chrome.storage.sync.set({loginTab: newTab.id}, ()=>{
+                                console.log("saving logging in tab id", newTab.id);
+                            });
+                        });
                     };
                 });
             } else if (msg.reply === "sending_login_info"){
                 chrome.storage.local.set({username: msg.data.username, password: msg.data.password}, ()=>{
                     console.log('saving user info', msg.data)
+                    port.postMessage({reply: "saved_login_info"});
                 });
             } else if (msg.message === "open_new_unfocused_tab"){
                 chrome.storage.local.get(['username', 'password'], (result)=>{

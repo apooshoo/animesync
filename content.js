@@ -26,6 +26,10 @@ port.onMessage.addListener((msg)=>{
         });
         div.append([header, usernameInput, passwordInput, submitBtn]);
         $("body").append(div);
+    } else if (msg.reply === "saved_login_info"){
+        $(".login-inputs").hide();
+        console.log("login info transfer complete, hiding form");
+        port.postMessage({message: "check_login_info"}); //again, this time to create tab
     }
 })
 

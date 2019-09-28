@@ -35,6 +35,10 @@
   	{
   		"matches": ["https://myanimelist.net/anime/*"],
   		"js": ["animeTab.js"]
+  	},
+  	{
+  		"matches": ["https://myanimelist.net/"],
+  		"js": ["jquery.js", "checkLogin.js"]
   	}
   ],
   "manifest_version": 2
