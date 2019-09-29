@@ -7,9 +7,12 @@ window.onload = ()=>{//---------------------------------------------------------
 
 console.log('testing from content js');
 var port = chrome.runtime.connect({name: "sync"});
+
+//check if user has user data saved,
 port.postMessage({message: "check_login_info"});
 port.onMessage.addListener((msg)=>{
     console.log('msg in content', msg);
+    //if there is no user data saved, make form to get username and password for background
     if (msg.reply === "need_login_info"){
         console.log('proceeding to get login info')
         let div = $("<div class='login-inputs'></div>").css({"height": "140px", "width": "250px", "position": "absolute", "top": "0", "right": "0", "background-color": "white", "border": "1px solid black", "padding": "1px 10px 1px 10px"});
@@ -26,6 +29,7 @@ port.onMessage.addListener((msg)=>{
         });
         div.append([header, usernameInput, passwordInput, submitBtn]);
         $("body").append(div);
+    //if background has saved your form data, hide the form.
     } else if (msg.reply === "saved_login_info"){
         $(".login-inputs").hide();
         console.log("login info transfer complete, hiding form");
@@ -48,14 +52,17 @@ var links = [...nodeList]
 // var links = Array.from(htmlCollection);
 // console.log(links)
 // console.log(links[0])
+
+//make every link also a href to the
 links.map(link=>{
-    link.parentNode.onclick = () =>{//remove parentNode when you're done testing- go back to magnet-link
-        // chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", })
+    link.childNodes[0].onclick = () =>{//directly target the <a> link
         console.log('clicked!', link);
 
-        let episodeNumber = link.parentNode.id.substring(0,2);//add one more parentnode when you're done to compensate for line 28
+        //get episode number from ID
+        let episodeNumber = link.parentNode.id.substring(0,2);
         console.log("ep number:", episodeNumber);
 
+        //AJAX for anime URL
         var request = new XMLHttpRequest();
 
         request.addEventListener("load", function(){
@@ -64,16 +71,11 @@ links.map(link=>{
             alert('Failed to create group! Try another group name.')
           } else {
             let anime = responseData.results[0];
-            console.log("Returned anime:", anime);
-            // chrome.runtime.sendMessage({"message": "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id});
 
+            //send anime data to background for syncing
             port.postMessage({message: "open_new_unfocused_tab", "url": anime.url, "animeId": anime.mal_id, "episodeNumber": episodeNumber});
-            // port.onMessage.addListener((msg)=>{
-            //     console.log(msg)
-            // });
           };
         });
-        // request.open("GET", 'https://api.jikan.moe/v3/search/manga?q=grand%20blue&page=1');
         request.open("GET", `https://api.jikan.moe/v3/search/anime?q=${queryString}`);
         request.send();
     };
@@ -82,20 +84,6 @@ links.map(link=>{
 
 }
 
-
-
-
-
-// chrome.runtime.onMessage.addListener(
-//   (request, sender, sendResponse)=>{
-//     if( request.message === "clicked_browser_action" ) {
-//         let a = document.getElementsByTagName('a');
-//         let firstHref = a[0].href;
-//         console.log(firstHref)
-//         chrome.runtime.sendMessage({"message": "open_new_tab", "url": firstHref});
-//     };
-//   }
-// );
 
 //here, content can grab href URL but cannot use chrome.tabs.
 //on the other hand, background can use chrome.tabs but cannot grab URL
