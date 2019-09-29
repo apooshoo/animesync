@@ -11,20 +11,8 @@ port.onMessage.addListener((msg)=>{
         $("#loginUserName").val(`${msg.data.username}`);
         $("#login-password").val(`${msg.data.password}`);
         $(".inputButton[name=sublogin]").click();
+        port.postMessage({reply: "done_login"});
     } else if (msg.reply === "abort_login"){
         console.log('login failed, stopping login');
     };
 });
-
- // (response)=>{
-//     console.log("response in login", response)
-//     $("#loginUserName").val(`${response.data.username}`);
-//     $("#login-password").val(`${response.data.password}`);
-//     $(".inputButton[name=sublogin]").click();
-//     // usernameInput.val(`${response.data.username}`);
-//     // passwordInput.val(`${response.data.password}`);
-
-//     // console.log(submitBtn)
-//     // console.log(usernameInput.val())
-//     // console.log(passwordInput.val())
-// });

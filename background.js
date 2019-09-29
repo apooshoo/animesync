@@ -3,6 +3,9 @@
 // found in the LICENSE file.
 
 'use strict';
+// chrome.tabs.get(2042, (tab)=>{
+//     console.log(tab)
+// })
 
 chrome.storage.local.clear();//rm later
 
@@ -23,7 +26,7 @@ let toggleProcessing = () => {
     });
 };
 
-let clearProcessed = () => {
+let clearProcessed = () => {//requires that we process one at a time
     chrome.storage.sync.get(['animeTabs'], (result)=>{
         console.log("clearing animeTab");
         let animeTabs = result.animeTabs;
@@ -60,77 +63,60 @@ let createNewTab = (msg) => {
     });
 }
 
-// chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
-//     if (request.message === "already_logged_in"){
-//         console.log('already logged in!');
-//         //CLOSE checkLogin TAB
-//     } else if (request.message === "redirect_to_login"){//add code for failed login here
-//         console.log('redirecting to login page');
-//         chrome.tabs.create({"url": "https://myanimelist.net/login.php?from=%2F", "active": false}, (newTab)=>{
-//             chrome.storage.sync.set({loginTabId: newTab.id}, ()=>{
-//                 console.log('saving loginTabId', newTab.id);
-//             });
-//         });
-//     } else if (request.message === "inputting_login_info"){
-//         console.log("sending input info");
-//         chrome.storage.local.get(['username', 'password', 'logging'], (result)=>{
-//             console.log("logging", result.logging);
-//             if(result.logging === false){
-//                 let data = {
-//                     username: result.username,
-//                     password: result.password
-//                 };
-//                 sendResponse({data: data});
-//                 toggleLogging();
-//             } else if (result.logging === true){
-//                 console.log('already logging in')
-//             }
-//         });
-//         return true
-//     }
-// });
-
 chrome.runtime.onConnect.addListener((port)=>{
+    //content
     if(port.name === "sync"){
         port.onMessage.addListener((msg)=>{
+            //on content ready,
             if(msg.message === "check_login_info"){
+                //check if user has saved data,
                 chrome.storage.local.get(['username', 'password'], (result)=>{
                     console.log('local username', result.username);
                     console.log('local password', result.password);
+                    //if no user data in storage, give form to get username and password
                     if(result.username === undefined || result.password === undefined){
                         console.log('need login info');
                         port.postMessage({reply: "need_login_info"});
+                    //else if have user data, open checkLogin tab to check if already logged in
+                    //save checkLoginTabId in sync storage
                     } else {
                         console.log('have login info!');
-                        //LOGIN HERE
                         chrome.tabs.create({"url": "https://myanimelist.net/", "active": false}, (newTab)=>{
                             chrome.storage.sync.set({checkLoginTabId: newTab.id}, ()=>{
-                                console.log("saving checkLoginTab id", newTab.id);
+                                // console.log("tab:", newTab)
+                                // console.log("saving checkLoginTab id", newTab.id);
                             });
                         });
                     };
                 });
+            //if content is sending user info from form, save the data
             } else if (msg.reply === "sending_login_info"){
                 chrome.storage.local.set({username: msg.data.username, password: msg.data.password}, ()=>{
                     console.log('saving user info', msg.data)
                     port.postMessage({reply: "saved_login_info"});
                 });
+            //if user clicks on anime download link in content, open tab to anime info to sync data
             } else if (msg.message === "open_new_unfocused_tab"){
                 chrome.storage.local.get(['username', 'password'], (result)=>{
                     console.log('local username', result.username);
                     console.log('local password', result.password);
+                    //if user has ignored the form and clicked on download without inputting data, send warning before checking (in case they logged in manually)
                     if(result.username === undefined || result.password === undefined){
-                        alert("No user info saved! Please login to MAL manually to continue using this extension")
+                        alert("No user info saved! Please login to MAL manually to use this extension.")//-----------clunky: option to ignore?
                         createNewTab(msg);
                     } else {
+                    //if user has already input data, proceed
                         createNewTab(msg);
                     };
                 });
+                //message for good measure
                 port.postMessage({reply: "DONE SENDING REQ TO ANIMETAB"})
             };
         })
+    //animeTab
     } else if (port.name === "animeTab"){
         port.onMessage.addListener((msg)=>{
+            //if user is logged in, send info to sync
             if(msg.message === "ready_to_click"){
                 console.log('sending click info');
                 chrome.storage.sync.get(['animeTabs', 'processing'], (result)=>{
@@ -144,50 +130,74 @@ chrome.runtime.onConnect.addListener((port)=>{
                         //YOU WILL THEN REDIRECT TO THE APPROPRIATE TAB (tabId of animeTabs[0] to get it to process)
                     };
                 });
+            //second time onwards, sync episode data
             } else if (msg.reply === "changed episode info"){
                 console.log('changed other info and back in background');
                 toggleProcessing();
                 clearProcessed();
+            //first time, change to watching
             } else if (msg.reply === "added to list"){
                 console.log('added to list and back in background');
                 toggleProcessing();
                 clearProcessed();
-            } else if (msg.message === "ready_to_login"){
-                console.log("gonna get login info in background");
-                //remove below when done
-                toggleProcessing();
-                clearProcessed();
+            //if not logged in,
+            } else if (msg.message === "not_logged_in"){
+                chrome.storage.sync.get(['animeTabs', 'processing'], (result)=>{
+                    //but trying to process, abort
+                    if(result.processing === true){
+                        console.log("abort because not logged in");
+                        toggleProcessing();
+                        clearProcessed();
+                    //and user is not trying to process (user is randomly surfing)
+                    } else {
+                        console.log('just chillin');
+                    };
+                });
             }
         });
+    //checkLogin
     } else if (port.name === "checkLogin"){
         port.onMessage.addListener((msg)=>{
+            //check if should login (so it doesn't activate when you go to the website directly)
             chrome.storage.local.get(['logging'], (result)=>{
+                //if you want to log in,
                 if(result.logging === true){
+                    //but you are already logged in, change logging to false and close checkLogin tab
                     if(msg.message === "already_logged_in"){
                         console.log('already logged in');
                         chrome.storage.local.set({logging: !result.logging}, ()=>{
                             console.log('setting logging to:', !result.logging);
                         });
+                        port.postMessage({reply: "alr logged in, closing tab!!"});
                         //close checkLogin tab
-                        port.postMessage({reply: "alr logged in, close tab please!"});//--------------------------------------------not done
+                        chrome.storage.sync.get(['checkLoginTabId'], (result)=>{
+                            chrome.tabs.remove(result.checkLoginTabId);
+                        });
+                    //and you are not yet logged in, redirect to login tab and close checkLogin tab
                     } else if (msg.message === "redirect_to_login"){
                         console.log('redirecting to login page');
                         chrome.tabs.create({"url": "https://myanimelist.net/login.php?from=%2F", "active": false}, (newTab)=>{
+                            //save login tab id
                             chrome.storage.sync.set({loginTabId: newTab.id}, ()=>{
                                 console.log('saving loginTabId', newTab.id);
                                 //close checkLogin tab
-                                port.postMessage({reply: "not logged in, redirecting, close tab please!"});//-----------------------same
+                                port.postMessage({reply: "not logged in, redirecting, closing tab!!"});
+                                chrome.storage.sync.get(['checkLoginTabId'], (result)=>{
+                                    chrome.tabs.remove(result.checkLoginTabId);
+                                });
                             });
                         });
                     };
                 };
             });
         });
+    //login
     } else if (port.name === "login"){
         port.onMessage.addListener((msg)=>{
+            //when login tab is ready,
             if (msg.message === "inputting_login_info"){
                 chrome.storage.local.get(['username', 'password', 'logging'], (result)=>{
-                    console.log("logging", result.logging)
+                    //and if you want to log in, give login tab the user info, and change logging to false ( no repeats )
                     if(result.logging === true){
                         console.log('sending login info')
                         let data = {
@@ -198,9 +208,21 @@ chrome.runtime.onConnect.addListener((port)=>{
                             console.log('setting logging to:', !result.logging);
                         });
                         port.postMessage({reply: "login_info", data: data});
+                    //but you do not want to log in, do nothing (user may be casually surfing)
                     } else if (result.logging === false){
-                        port.postMessage({reply: "abort_login"});//---------------------------------------------close login tab
-                    }
+                        port.postMessage({reply: "abort_login"});
+                    };
+                });
+            //if login has done input and simulate click, close login tab.
+            } else if (msg.reply === "done_login"){
+                //close login tab after 3s (to allow the login page time to process)
+                chrome.storage.sync.get(['loginTabId'], (result)=>{
+                    console.log(result)
+                    console.log('getting loginTabId', result.loginTabId);
+                    setTimeout(()=>{
+                        console.log('removing after 3s');
+                        chrome.tabs.remove(result.loginTabId);
+                    }, 3000);
                 });
             };
         });

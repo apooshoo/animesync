@@ -14,7 +14,7 @@ if (loginBtn[0] === undefined){
     port.postMessage({message: "ready_to_click"});
 } else {
     console.log("not logged in yet");
-    port.postMessage({message: "ready_to_login"});
+    port.postMessage({message: "not_logged_in"});
 }
 // port.postMessage({message: "ready_to_click"});
 port.onMessage.addListener((msg)=>{
