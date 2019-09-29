@@ -30,10 +30,8 @@ let clearProcessed = () => {//requires that we process one at a time
     chrome.storage.sync.get(['animeTabs'], (result)=>{
         console.log("clearing animeTab");
         let animeTabs = result.animeTabs;
-        //delete tab
-        // chrome.tabs.get(animeTabs[0].id, ()=>{
-
-        // })
+        //delete tab---------------------------------------------------------------------------
+        chrome.tabs.remove(animeTabs[0].id);
         animeTabs.shift();
         chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
             console.log("saved animeTabs to storage:", animeTabs);
