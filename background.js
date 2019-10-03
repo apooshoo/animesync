@@ -224,7 +224,7 @@ chrome.runtime.onConnect.addListener((port)=>{
                     setTimeout(()=>{
                         console.log('removing after 3s');
                         chrome.tabs.remove(result.loginTabId);
-                    }, 3000);
+                    }, 5000);
                 });
             };
         });
