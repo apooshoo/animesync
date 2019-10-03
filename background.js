@@ -190,7 +190,11 @@ chrome.runtime.onConnect.addListener((port)=>{
                             });
                         });
                     };
-                };
+                } else if (result.logging === false){
+                    chrome.storage.sync.get(['checkLoginTabId'], (result)=>{
+                        chrome.tabs.remove(result.checkLoginTabId);
+                    });
+                }
             });
         });
     //login
