@@ -30,14 +30,18 @@ let clearProcessed = () => {//requires that we process one at a time
     chrome.storage.sync.get(['animeTabs'], (result)=>{
         console.log("clearing animeTab");
         let animeTabs = result.animeTabs;
+        console.log(animeTabs)
         //delete tab---------------------------------------------------------------------------
-        chrome.tabs.remove(animeTabs[0].id);
-        animeTabs.shift();
-        chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
-            console.log("saved animeTabs to storage:", animeTabs);
-        })
-    })
-}
+
+        setTimeout(()=>{
+            chrome.tabs.remove(animeTabs[0].tabId);
+            animeTabs.shift();
+            chrome.storage.sync.set({animeTabs: animeTabs}, ()=>{
+                console.log("saved animeTabs to storage:", animeTabs);
+            });
+        }, 2000);
+    });
+};
 
 let createNewTab = (msg) => {
     chrome.tabs.create({"url": msg.url, "active": false}, (newTab)=>{
